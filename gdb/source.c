@@ -775,8 +775,18 @@ openp (const char *path, int opts, const char *string,
 
       if (is_regular_file (string))
 	{
-	  filename = alloca (strlen (string) + 1);
-	  strcpy (filename, string);
+	  if (opts & OPF_TRY_REALPATH)
+	    {
+	      char *real_path = gdb_realpath (string);
+	      filename = alloca (strlen (real_path) + 1);
+	      strcpy (filename, real_path);
+	      xfree (real_path);
+	    }
+	  else
+	    {
+	      filename = alloca (strlen (string) + 1);
+	      strcpy (filename, string);
+	    }
 	  fd = gdb_open_cloexec (filename, mode, 0);
 	  if (fd >= 0)
 	    goto done;
@@ -872,6 +882,25 @@ openp (const char *path, int opts, const char *string,
 
       strcat (filename + len, SLASH_STRING);
       strcat (filename, string);
+
+      /* Try the canonical path. */
+      if (opts & OPF_TRY_REALPATH)
+	{
+	  char *real_path;
+	  int newlen;
+
+	  real_path = gdb_realpath (filename);
+
+	  /* First, realloc the filename buffer if too short.  */
+	  newlen = len + strlen (real_path) + 1;
+	  if (newlen > alloclen)
+	    {
+	      alloclen = newlen;
+	      filename = alloca (alloclen);
+	    }
+	  strcpy (filename, real_path);
+	  xfree (real_path);
+	}
 
       if (is_regular_file (filename))
 	{
@@ -1089,8 +1118,8 @@ find_and_open_source (const char *filename,
         }
     }
 
-  result = openp (path, OPF_SEARCH_IN_PATH | OPF_RETURN_REALPATH, filename,
-		  OPEN_MODE, fullname);
+  result = openp (path, OPF_SEARCH_IN_PATH | OPF_RETURN_REALPATH |
+		  OPF_TRY_REALPATH, filename, OPEN_MODE, fullname);
   if (result < 0)
     {
       /* Didn't work.  Try using just the basename.  */

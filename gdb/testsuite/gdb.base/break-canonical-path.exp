@@ -1,0 +1,83 @@
+# Copyright (C) 2015 Free Software Foundation, Inc.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# This file tests if we can set a breakpoint provided our path is the
+# canonicalized path of a longer path with some parts that are not
+# present on the fs.
+# See breakpoints/17497 for more information
+
+# main directory for compilation
+set canonical_tmp_dir "break-canonical-path-tmp"
+# this directory will be deleted before putting the breakpoint
+set canonical_relative_dir "tmp"
+set canonical_srcfile_basename "break-canonical-path.c"
+
+standard_testfile $canonical_tmp_dir/$canonical_relative_dir/../$canonical_srcfile_basename
+
+proc canonical_cleanup {rmsrcfile rmreldir rmtmpdir} {
+    global subdir
+    global canonical_tmp_dir
+    global canonical_relative_dir
+    global canonical_srcfile_basename
+
+    if { $rmsrcfile && [catch { file delete $subdir/$canonical_tmp_dir/$canonical_srcfile_basename }] } {
+	print "file delete $subdir/$canonical_tmp_dir/$canonical_srcfile_basename failed"
+    }
+    if { $rmreldir && [catch { file delete  $subdir/$canonical_tmp_dir/$canonical_relative_dir }] } {
+	print "file delete $subdir/$canonical_tmp_dir/$canonical_relative_dir failed"
+    }
+    if { $rmtmpdir && [catch { file delete  $subdir/$canonical_tmp_dir }] } {
+	print "file delete $subdir/$canonical_tmp_di failed"
+    }
+}
+
+if [is_remote host] {
+    unsupported "Compiling on a remote host does not support a filename with directory."
+    return 0
+}
+
+if [catch { file mkdir "$subdir/$canonical_tmp_dir/$canonical_relative_dir" }]  {
+    untested "file mkdir $subdir/$canonical_tmp_dir/$canonical_relative_dir failed"
+    canonical_cleanup false true true
+    return 0
+}
+
+if [catch { file copy $srcdir/$subdir/$canonical_srcfile_basename $subdir/$canonical_tmp_dir }] {
+    untested "file copy $srcdir/$subdir/$srcfile_basename $subdir/$canonical_tmp_dir failed"
+    canonical_cleanup false true true
+    return 0
+}
+
+#compile with the to be deleted directory so that it is in the debug info
+set err [gdb_compile "$subdir/$srcfile" $binfile executable {debug}]
+if { $err != "" } {
+    untested "${srcfile} compilation failed"
+    canonical_cleanup true true true
+    return -1
+}
+
+#remove the directory so that we can test after that we can break even if it's not there
+#using the canonicalized version of the path
+if [catch { file delete $subdir/$canonical_tmp_dir/$canonical_relative_dir }] {
+    untested "rmdir  $subdir/$canonical_tmp_dir/$canonical_relative_dir failed"
+    canonical_cleanup true true true
+    return 0
+}
+
+clean_restart ${testfile}
+
+gdb_breakpoint $subdir/$canonical_tmp_dir/$canonical_srcfile_basename:[gdb_get_line_number "main" $srcdir/$subdir/$canonical_srcfile_basename] {message}
+
+canonical_cleanup true true true

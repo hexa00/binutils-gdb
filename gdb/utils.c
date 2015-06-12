@@ -68,6 +68,7 @@
 #include "gdb_usleep.h"
 #include "interps.h"
 #include "gdb_regex.h"
+#include "canonicalize.h"
 
 #if !HAVE_DECL_MALLOC
 extern PTR malloc ();		/* ARI: PTR */
@@ -2864,7 +2865,7 @@ gdb_realpath (const char *filename)
   }
 #else
   {
-    char *rp = canonicalize_file_name (filename);
+    char *rp = canonicalize_filename_mode (filename, CAN_MISSING);
 
     if (rp != NULL)
       return rp;
