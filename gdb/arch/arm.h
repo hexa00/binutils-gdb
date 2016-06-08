@@ -104,7 +104,9 @@ enum arm_breakpoint_kinds
 
 /* Support routines for instruction parsing.  */
 #define submask(x) ((1L << ((x) + 1)) - 1)
+#define submask_64(x) ((1LL << ((x) + 1)) - 1)
 #define bits(obj,st,fn) (((obj) >> (st)) & submask ((fn) - (st)))
+#define bits_64(obj,st,fn) (((obj) >> (st)) & submask ((fn) - (st)))
 #define bit(obj,st) (((obj) >> (st)) & 1)
 #define sbits(obj,st,fn) \
   ((long) (bits(obj,st,fn) | ((long) bit(obj,fn) * ~ submask (fn - st))))
