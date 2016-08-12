@@ -91,7 +91,7 @@ static void signal_command (char *, int);
 
 static void jump_command (char *, int);
 
-static void step_1 (int, int, char *);
+static void step_1 (int, int, int, char *);
 
 static void next_command (char *, int);
 
@@ -873,12 +873,20 @@ set_step_frame (void)
   tp->control.step_start_function = find_pc_function (pc);
 }
 
-/* Step until outside of current statement.  */
+/* Step until outside of current line or function.  */
 
 static void
 step_command (char *count_string, int from_tty)
 {
-  step_1 (0, 0, count_string);
+  step_1 (0, 0, 0, count_string);
+}
+
+/* Step until outside of the current statement.  */
+
+static void
+steps_command (char *count_string, int from_tty)
+{
+  step_1 (0, 0, 1, count_string);
 }
 
 /* Likewise, but skip over subroutine calls as if single instructions.  */
@@ -886,7 +894,7 @@ step_command (char *count_string, int from_tty)
 static void
 next_command (char *count_string, int from_tty)
 {
-  step_1 (1, 0, count_string);
+  step_1 (1, 0, 0, count_string);
 }
 
 /* Likewise, but step only one instruction.  */
@@ -894,13 +902,13 @@ next_command (char *count_string, int from_tty)
 static void
 stepi_command (char *count_string, int from_tty)
 {
-  step_1 (0, 1, count_string);
+  step_1 (0, 1, 0, count_string);
 }
 
 static void
 nexti_command (char *count_string, int from_tty)
 {
-  step_1 (1, 1, count_string);
+  step_1 (1, 1, 0, count_string);
 }
 
 void
@@ -926,6 +934,9 @@ struct step_command_fsm
 
   /* If true, this is a stepi/nexti, otherwise a step/step.  */
   int single_inst;
+
+  /* If true this is a steps, step by statement.  */
+  int step_by_statement;
 };
 
 static void step_command_fsm_clean_up (struct thread_fsm *self,
@@ -965,10 +976,12 @@ new_step_command_fsm (struct interp *cmd_interp)
 static void
 step_command_fsm_prepare (struct step_command_fsm *sm,
 			  int skip_subroutines, int single_inst,
+			  int step_by_statement,
 			  int count, struct thread_info *thread)
 {
   sm->skip_subroutines = skip_subroutines;
   sm->single_inst = single_inst;
+  sm->step_by_statement = step_by_statement;
   sm->count = count;
 
   /* Leave the si command alone.  */
@@ -981,7 +994,8 @@ step_command_fsm_prepare (struct step_command_fsm *sm,
 static int prepare_one_step (struct step_command_fsm *sm);
 
 static void
-step_1 (int skip_subroutines, int single_inst, char *count_string)
+step_1 (int skip_subroutines, int single_inst, int step_by_statement,
+	char *count_string)
 {
   int count;
   int async_exec;
@@ -1013,7 +1027,8 @@ step_1 (int skip_subroutines, int single_inst, char *count_string)
   thr->thread_fsm = &step_sm->thread_fsm;
 
   step_command_fsm_prepare (step_sm, skip_subroutines,
-			    single_inst, count, thr);
+			    single_inst, step_by_statement,
+			    count, thr);
 
   /* Do only one step for now, before returning control to the event
      loop.  Let the continuation figure out how many other steps we
@@ -1159,6 +1174,8 @@ prepare_one_step (struct step_command_fsm *sm)
 
       if (sm->skip_subroutines)
 	tp->control.step_over_calls = STEP_OVER_ALL;
+
+      tp->control.step_by_statement = sm->step_by_statement;
 
       return 0;
     }
@@ -3380,6 +3397,13 @@ Usage: step [N]\n\
 Argument N means step N times (or till program stops for another \
 reason)."));
   add_com_alias ("s", "step", class_run, 1);
+
+  add_com ("steps", class_run, steps_command, _("\
+Step program until it reaches a different statement.\n	\
+Usage: steps [N]\n						 \
+Argument N means step N times (or till program stops for another \
+reason)."));
+  add_com_alias ("ss", "steps", class_run, 1);
 
   c = add_com ("until", class_run, until_command, _("\
 Execute until the program reaches a source line greater than the current\n\

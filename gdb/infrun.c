@@ -7004,7 +7004,22 @@ process_event_stop_test (struct execution_control_state *ecs)
       return;
     }
 
+  if ((stop_pc == stop_pc_sal.pc) &&
+      ecs->event_thread->control.step_by_statement == 1)
+    {
+      /* We are at the start of a different line.  So stop.  Note that
+         we don't stop if we step into the middle of a different line.
+         That is said to make things like for (;;) statements work
+         better.  */
+      if (debug_infrun)
+	 fprintf_unfiltered (gdb_stdlog,
+			     "infrun: stepped to a different statement\n");
+      end_stepping_range (ecs);
+      return;
+    }
+
   if ((stop_pc == stop_pc_sal.pc)
+      && ecs->event_thread->control.step_by_statement == 0
       && (ecs->event_thread->current_line != stop_pc_sal.line
  	  || ecs->event_thread->current_symtab != stop_pc_sal.symtab))
     {

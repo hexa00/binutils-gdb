@@ -140,6 +140,9 @@ struct thread_control_state
      command.  This is used to decide whether "set scheduler-locking
      step" behaves like "on" or "off".  */
   int stepping_command;
+
+  /* When using steps stop at each statement.  */
+  int step_by_statement;
 };
 
 /* Inferior thread specific part of `struct infcall_suspend_state'.  */
