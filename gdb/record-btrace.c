@@ -681,7 +681,7 @@ btrace_print_lines (struct btrace_line_range lines, struct ui_out *uiout,
       *ui_item_chain
 	= make_cleanup_ui_out_tuple_begin_end (uiout, "src_and_asm_line");
 
-      print_source_lines (lines.symtab, line, line + 1, psl_flags);
+      print_source_lines (lines.symtab, line, line + 1, 0, psl_flags);
 
       make_cleanup_ui_out_list_begin_end (uiout, "line_asm_insn");
     }

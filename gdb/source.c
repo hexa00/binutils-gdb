@@ -1347,6 +1347,7 @@ identify_source_line (struct symtab *s, int line, int mid_statement,
 
 static void
 print_source_lines_base (struct symtab *s, int line, int stopline,
+			 int column,
 			 print_source_lines_flags flags)
 {
   int c;
@@ -1457,6 +1458,7 @@ print_source_lines_base (struct symtab *s, int line, int stopline,
   while (nlines-- > 0)
     {
       char buf[20];
+      int i;
 
       c = fgetc (stream);
       if (c == EOF)
@@ -1495,6 +1497,17 @@ print_source_lines_base (struct symtab *s, int line, int stopline,
 	    }
 	}
       while (c != '\n' && (c = fgetc (stream)) >= 0);
+
+      /* Print column indicator.  */
+      if (column > 1)
+	{
+	  ui_out_text (uiout, "\t");
+	  for (i = 0; i < column-1; i++)
+	    {
+	      ui_out_text (uiout, " ");
+	    }
+	  ui_out_text (uiout, "^\n");
+	}
     }
 
   do_cleanups (cleanup);
@@ -1507,9 +1520,10 @@ print_source_lines_base (struct symtab *s, int line, int stopline,
 
 void
 print_source_lines (struct symtab *s, int line, int stopline,
+		    int column,
 		    print_source_lines_flags flags)
 {
-  print_source_lines_base (s, line, stopline, flags);
+  print_source_lines_base (s, line, stopline, column, flags);
 }
 
 /* Print info on range of pc's in a specified line.  */
@@ -1704,7 +1718,7 @@ forward_search_command (char *regex, int from_tty)
 	{
 	  /* Match!  */
 	  do_cleanups (cleanups);
-	  print_source_lines (current_source_symtab, line, line + 1, 0);
+	  print_source_lines (current_source_symtab, line, line + 1, 0, 0);
 	  set_internalvar_integer (lookup_internalvar ("_"), line);
 	  current_source_line = max (line - lines_to_list / 2, 1);
 	  return;
@@ -1782,7 +1796,7 @@ reverse_search_command (char *regex, int from_tty)
 	{
 	  /* Match!  */
 	  do_cleanups (cleanups);
-	  print_source_lines (current_source_symtab, line, line + 1, 0);
+	  print_source_lines (current_source_symtab, line, line + 1, 0, 0);
 	  set_internalvar_integer (lookup_internalvar ("_"), line);
 	  current_source_line = max (line - lines_to_list / 2, 1);
 	  return;

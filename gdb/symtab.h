@@ -1494,7 +1494,7 @@ enum print_source_lines_flag
   };
 DEF_ENUM_FLAGS_TYPE (enum print_source_lines_flag, print_source_lines_flags);
 
-extern void print_source_lines (struct symtab *, int, int,
+extern void print_source_lines (struct symtab *, int, int, int,
 				print_source_lines_flags);
 
 extern void forget_cached_source_info_for_objfile (struct objfile *);

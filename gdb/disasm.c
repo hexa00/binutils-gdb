@@ -419,7 +419,7 @@ do_mixed_source_and_assembly_deprecated
 		  ui_out_tuple_chain
 		    = make_cleanup_ui_out_tuple_begin_end (uiout,
 							   "src_and_asm_line");
-		  print_source_lines (symtab, next_line, mle[i].line + 1, psl_flags);
+		  print_source_lines (symtab, next_line, mle[i].line + 1, 0, psl_flags);
 		}
 	      else
 		{
@@ -432,7 +432,7 @@ do_mixed_source_and_assembly_deprecated
 		      ui_out_tuple_chain_line
 			= make_cleanup_ui_out_tuple_begin_end (uiout,
 							       "src_and_asm_line");
-		      print_source_lines (symtab, next_line, next_line + 1,
+		      print_source_lines (symtab, next_line, next_line + 1, 0,
 					  psl_flags);
 		      ui_out_list_chain_line
 			= make_cleanup_ui_out_list_begin_end (uiout,
@@ -445,7 +445,8 @@ do_mixed_source_and_assembly_deprecated
 		  ui_out_tuple_chain
 		    = make_cleanup_ui_out_tuple_begin_end (uiout,
 							   "src_and_asm_line");
-		  print_source_lines (symtab, next_line, mle[i].line + 1, psl_flags);
+		  print_source_lines (symtab, next_line, mle[i].line + 1,
+				      0, psl_flags);
 		}
 	    }
 	  else
@@ -453,7 +454,8 @@ do_mixed_source_and_assembly_deprecated
 	      ui_out_tuple_chain
 		= make_cleanup_ui_out_tuple_begin_end (uiout,
 						       "src_and_asm_line");
-	      print_source_lines (symtab, mle[i].line, mle[i].line + 1, psl_flags);
+	      print_source_lines (symtab, mle[i].line, mle[i].line + 1,
+				  0, psl_flags);
 	    }
 
 	  next_line = mle[i].line + 1;
@@ -686,7 +688,8 @@ do_mixed_source_and_assembly (struct gdbarch *gdbarch, struct ui_out *uiout,
 		  ui_out_tuple_chain_line
 		    = make_cleanup_ui_out_tuple_begin_end (uiout,
 							   "src_and_asm_line");
-		  print_source_lines (sal.symtab, l, l + 1, psl_flags);
+		  print_source_lines (sal.symtab, l, l + 1,
+				      0, psl_flags);
 		  ui_out_list_chain_line
 		    = make_cleanup_ui_out_list_begin_end (uiout,
 							  "line_asm_insn");
@@ -697,7 +700,8 @@ do_mixed_source_and_assembly (struct gdbarch *gdbarch, struct ui_out *uiout,
 	  ui_out_tuple_chain
 	    = make_cleanup_ui_out_tuple_begin_end (uiout, "src_and_asm_line");
 	  if (sal.symtab != NULL)
-	    print_source_lines (sal.symtab, sal.line, sal.line + 1, psl_flags);
+	    print_source_lines (sal.symtab, sal.line, sal.line + 1, 0,
+				psl_flags);
 	  else
 	    ui_out_text (uiout, _("--- no source info for this pc ---\n"));
 	  ui_out_list_chain

@@ -913,7 +913,7 @@ print_frame_info (struct frame_info *frame, int print_level,
 		  ui_out_text (uiout, "\t");
 		}
 
-	      print_source_lines (sal.symtab, sal.line, sal.line + 1, 0);
+	      print_source_lines (sal.symtab, sal.line, sal.line + 1, sal.column, 0);
 	    }
 	}
 
