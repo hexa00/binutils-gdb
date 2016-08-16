@@ -897,6 +897,15 @@ next_command (char *count_string, int from_tty)
   step_1 (1, 0, 0, count_string);
 }
 
+/* Step until outside of the current statement, but skip over subroutine
+   calls as if single statement.  */
+
+static void
+nexts_command (char *count_string, int from_tty)
+{
+  step_1 (1, 0, 1, count_string);
+}
+
 /* Likewise, but step only one instruction.  */
 
 static void
@@ -3390,6 +3399,14 @@ Unlike \"step\", if the current source line calls a subroutine,\n\
 this command does not enter the subroutine, but instead steps over\n\
 the call, in effect treating it as a single source line."));
   add_com_alias ("n", "next", class_run, 1);
+
+  add_com ("nexts", class_run, nexts_command, _("\
+Step program by statement, proceeding through subroutine calls.\n\
+Usage: nexts [N]\n\
+Unlike \"steps\", if the current source line calls a subroutine,\n\
+this command does not enter the subroutine, but instead steps over\n\
+the call, in effect treating it as a single statement."));
+  add_com_alias ("ns", "nexts", class_run, 1);
 
   add_com ("step", class_run, step_command, _("\
 Step program until it reaches a different source line.\n\
