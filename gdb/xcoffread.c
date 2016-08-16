@@ -881,12 +881,12 @@ enter_line_range (struct subfile *subfile, unsigned beginoffset,
       if (int_lnno.l_lnno == 0)
 	{
 	  *firstLine = read_symbol_lineno (int_lnno.l_addr.l_symndx);
-	  record_line (subfile, 0, gdbarch_addr_bits_remove (gdbarch, addr));
+	  record_line (subfile, 0, 0, gdbarch_addr_bits_remove (gdbarch, addr));
 	  --(*firstLine);
 	}
       else
 	record_line (subfile, *firstLine + int_lnno.l_lnno,
-		     gdbarch_addr_bits_remove (gdbarch, addr));
+		     0, gdbarch_addr_bits_remove (gdbarch, addr));
       curoffset += linesz;
     }
 }

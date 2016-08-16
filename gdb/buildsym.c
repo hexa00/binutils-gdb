@@ -897,7 +897,8 @@ pop_subfile (void)
    line vector for SUBFILE.  */
 
 void
-record_line (struct subfile *subfile, int line, CORE_ADDR pc)
+record_line (struct subfile *subfile, int line, unsigned int column,
+	     CORE_ADDR pc)
 {
   struct linetable_entry *e;
 
@@ -953,6 +954,7 @@ record_line (struct subfile *subfile, int line, CORE_ADDR pc)
 
   e = subfile->line_vector->item + subfile->line_vector->nitems++;
   e->line = line;
+  e->column = column;
   e->pc = pc;
 }
 

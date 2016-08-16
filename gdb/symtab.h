@@ -804,6 +804,8 @@ struct symbol
 
   unsigned short line;
 
+  unsigned int column;
+
   /* An arbitrary data pointer, allowing symbol readers to record
      additional information on a per-symbol basis.  Note that this data
      must be allocated using the same obstack as the symbol itself.  */
@@ -854,6 +856,7 @@ extern const struct block_symbol null_block_symbol;
   (symbol)->is_cplus_template_function
 #define SYMBOL_TYPE(symbol)		(symbol)->type
 #define SYMBOL_LINE(symbol)		(symbol)->line
+#define SYMBOL_COLUMN(symbol)		(symbol)->column
 #define SYMBOL_COMPUTED_OPS(symbol)	(SYMBOL_IMPL (symbol).ops_computed)
 #define SYMBOL_BLOCK_OPS(symbol)	(SYMBOL_IMPL (symbol).ops_block)
 #define SYMBOL_REGISTER_OPS(symbol)	(SYMBOL_IMPL (symbol).ops_register)
@@ -918,6 +921,7 @@ struct template_symbol
 struct linetable_entry
 {
   int line;
+  unsigned int column;
   CORE_ADDR pc;
 };
 
@@ -1424,7 +1428,8 @@ struct symtab_and_line
      0 is never a valid line number; it is used to indicate that line number
      information is not available.  */
   int line;
-
+  unsigned int column;
+  
   CORE_ADDR pc;
   CORE_ADDR end;
   int explicit_pc;

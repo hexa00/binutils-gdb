@@ -1133,7 +1133,7 @@ coff_symtab_read (long symtab_offset, unsigned int nsyms,
 	         of the closing '}', and for which we do not have any
 	         other statement-line-number.  */
 	      if (fcn_last_line == 1)
-		record_line (current_subfile, fcn_first_line,
+		record_line (current_subfile, fcn_first_line, 0,
 			     gdbarch_addr_bits_remove (gdbarch,
 						       fcn_first_line_addr));
 	      else
@@ -1513,7 +1513,7 @@ enter_linenos (long file_offset, int first_line,
 	  addr += ANOFFSET (objfile->section_offsets,
 			    SECT_OFF_TEXT (objfile));
 	  record_line (current_subfile,
-		       first_line + L_LNNO32 (&lptr),
+		       first_line + L_LNNO32 (&lptr), 0,
 		       gdbarch_addr_bits_remove (gdbarch, addr));
 	}
       else

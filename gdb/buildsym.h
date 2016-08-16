@@ -186,7 +186,7 @@ EXTERN int within_function;
 
 /* The type of the record_line function.  */
 typedef void (record_line_ftype) (struct subfile *subfile, int line,
-				  CORE_ADDR pc);
+				  unsigned int column, CORE_ADDR pc);
 
 
 

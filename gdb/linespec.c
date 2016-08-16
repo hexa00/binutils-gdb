@@ -3899,6 +3899,7 @@ symbol_to_sal (struct symtab_and_line *result,
 	  init_sal (result);
 	  result->symtab = symbol_symtab (sym);
 	  result->line = SYMBOL_LINE (sym);
+	  result->column = SYMBOL_COLUMN (sym);
 	  result->pc = SYMBOL_VALUE_ADDRESS (sym);
 	  result->pspace = SYMTAB_PSPACE (result->symtab);
 	  result->explicit_pc = 1;
@@ -3914,6 +3915,7 @@ symbol_to_sal (struct symtab_and_line *result,
 	  init_sal (result);
 	  result->symtab = symbol_symtab (sym);
 	  result->line = SYMBOL_LINE (sym);
+	  result->column = SYMBOL_COLUMN (sym);
 	  result->pspace = SYMTAB_PSPACE (result->symtab);
 	  return 1;
 	}

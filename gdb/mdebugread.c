@@ -4117,7 +4117,7 @@ psymtab_to_symtab_1 (struct objfile *objfile,
 		  /* Handle encoded stab line number.  */
 		  valu += ANOFFSET (section_offsets,
 				    SECT_OFF_TEXT (objfile));
-		  record_line (current_subfile, sh.index,
+		  record_line (current_subfile, sh.index, 0,
 			       gdbarch_addr_bits_remove (gdbarch, valu));
 		}
 	    }

@@ -17590,6 +17590,7 @@ typedef struct
   unsigned char op_index;
   unsigned int file;
   unsigned int line;
+  unsigned int column;
   CORE_ADDR address;
   int is_stmt;
   unsigned int discriminator;
@@ -17632,7 +17633,8 @@ typedef struct
 /* Ignore this record_line request.  */
 
 static void
-noop_record_line (struct subfile *subfile, int line, CORE_ADDR pc)
+noop_record_line (struct subfile *subfile, int line, unsigned int column,
+		  CORE_ADDR pc)
 {
   return;
 }
@@ -17670,6 +17672,7 @@ noop_record_line (struct subfile *subfile, int line, CORE_ADDR pc)
 static int
 dwarf_record_line_p (unsigned int line, unsigned int last_line,
 		     int line_has_non_zero_discriminator,
+		     int line_has_column_info,
 		     struct subfile *last_subfile)
 {
   if (current_subfile != last_subfile)
@@ -17678,9 +17681,11 @@ dwarf_record_line_p (unsigned int line, unsigned int last_line,
     return 1;
   /* Same line for the same file that we've seen already.
      As a last check, for pr 17276, only record the line if the line
-     has never had a non-zero discriminator.  */
-  if (!line_has_non_zero_discriminator)
-    return 1;
+     has never had a non-zero discriminator.
+     However if the line as column information record it.  */
+  if (!line_has_non_zero_discriminator || line_has_column_info)
+      return 1;
+
   return 0;
 }
 
@@ -17689,7 +17694,7 @@ dwarf_record_line_p (unsigned int line, unsigned int last_line,
 
 static void
 dwarf_record_line_1 (struct gdbarch *gdbarch, struct subfile *subfile,
-		     unsigned int line, CORE_ADDR address,
+		     unsigned int line, unsigned int column, CORE_ADDR address,
 		     record_line_ftype p_record_line)
 {
   CORE_ADDR addr = gdbarch_addr_bits_remove (gdbarch, address);
@@ -17702,7 +17707,7 @@ dwarf_record_line_1 (struct gdbarch *gdbarch, struct subfile *subfile,
 			  paddress (gdbarch, address));
     }
 
-  (*p_record_line) (subfile, line, addr);
+  (*p_record_line) (subfile, line, column, addr);
 }
 
 /* Subroutine of dwarf_decode_lines_1 to simplify it.
@@ -17725,7 +17730,7 @@ dwarf_finish_line (struct gdbarch *gdbarch, struct subfile *subfile,
 			  paddress (gdbarch, address));
     }
 
-  dwarf_record_line_1 (gdbarch, subfile, 0, address, p_record_line);
+  dwarf_record_line_1 (gdbarch, subfile, 0, 0, address, p_record_line);
 }
 
 /* Record the line in STATE.
@@ -17736,20 +17741,21 @@ dwarf_record_line (lnp_reader_state *reader, lnp_state_machine *state,
 		   int end_sequence)
 {
   const struct line_header *lh = reader->line_header;
-  unsigned int file, line, discriminator;
+  unsigned int file, line, column, discriminator;
   int is_stmt;
 
   file = state->file;
   line = state->line;
+  column = state->column;
   is_stmt = state->is_stmt;
   discriminator = state->discriminator;
 
   if (dwarf_line_debug)
     {
       fprintf_unfiltered (gdb_stdlog,
-			  "Processing actual line %u: file %u,"
+			  "Processing actual line %u: column %u: file %u,"
 			  " address %s, is_stmt %u, discrim %u\n",
-			  line, file,
+			  line, column, file,
 			  paddress (reader->gdbarch, state->address),
 			  is_stmt, discriminator);
     }
@@ -17761,8 +17767,9 @@ dwarf_record_line (lnp_reader_state *reader, lnp_state_machine *state,
      previous version of the code.  */
   else if (state->op_index == 0 || end_sequence)
     {
+
       lh->file_names[file - 1].included_p = 1;
-      if (reader->record_lines_p && is_stmt)
+      if (reader->record_lines_p)
 	{
 	  if (state->last_subfile != current_subfile || end_sequence)
 	    {
@@ -17774,10 +17781,11 @@ dwarf_record_line (lnp_reader_state *reader, lnp_state_machine *state,
 	    {
 	      if (dwarf_record_line_p (line, state->last_line,
 				       state->line_has_non_zero_discriminator,
+				       state->column > 1,
 				       state->last_subfile))
 		{
 		  dwarf_record_line_1 (reader->gdbarch, current_subfile,
-				       line, state->address,
+				       line, column, state->address,
 				       state->record_line);
 		}
 	      state->last_subfile = current_subfile;
@@ -17808,6 +17816,7 @@ init_lnp_state_machine (lnp_state_machine *state,
   state->op_index = 0;
   state->file = 1;
   state->line = 1;
+  state->column = 1;
   /* Call `gdbarch_adjust_dwarf2_line' on the initial 0 address as if there
      was a line entry for it so that the backend has a chance to adjust it
      and also record it in case it needs it.  This is currently used by MIPS
@@ -17935,6 +17944,7 @@ dwarf_decode_lines_1 (struct line_header *lh, struct dwarf2_cu *cu,
 
 	      dwarf_record_line (&reader_state, &state_machine, 0);
 	      state_machine.discriminator = 0;
+	      state_machine.column = 0;
 	    }
 	  else switch (op_code)
 	    {
@@ -18074,7 +18084,8 @@ dwarf_decode_lines_1 (struct line_header *lh, struct dwarf2_cu *cu,
 	      }
 	      break;
 	    case DW_LNS_set_column:
-	      (void) read_unsigned_leb128 (abfd, line_ptr, &bytes_read);
+	      state_machine.column
+		=read_unsigned_leb128 (abfd, line_ptr, &bytes_read);
 	      line_ptr += bytes_read;
 	      break;
 	    case DW_LNS_negate_stmt:

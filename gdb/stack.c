@@ -1247,6 +1247,11 @@ print_frame (struct frame_info *frame, int print_level,
       ui_out_text (uiout, ":");
       annotate_frame_source_line ();
       ui_out_field_int (uiout, "line", sal.line);
+      if (sal.column > 1)
+	{
+	  ui_out_text (uiout, ",");
+	  ui_out_field_int (uiout, "column", sal.column);
+	}
       annotate_frame_source_end ();
     }
 
