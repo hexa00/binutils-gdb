@@ -107,7 +107,10 @@ foreach break_always_inserted { "on" "off" } {
 step_over_tracepoint "trace"
 
 set libipa [get_in_proc_agent]
-set remote_libipa [gdb_load_shlib $libipa]
+if { [catch {gdb_load_shlib $libipa} remote_libipa] } {
+    untested "Failed to load $libipa"
+    return -1
+}
 
 # Compile test case again with IPA.
 if { [gdb_compile_pthreads "$srcdir/$subdir/$srcfile" $binfile \

@@ -67,7 +67,11 @@ proc range_stepping_with_tracepoint { type } {
 range_stepping_with_tracepoint "trace"
 
 set libipa [get_in_proc_agent]
-set remote_libipa [gdb_load_shlib $libipa]
+
+if { [catch {gdb_load_shlib $libipa} remote_libipa] } {
+    untested "Failed to load $libipa"
+    return -1
+}
 
 if { [gdb_compile "$srcdir/$subdir/$srcfile" $binfile \
 	  executable [list debug nowarnings shlib=$libipa] ] != "" } {

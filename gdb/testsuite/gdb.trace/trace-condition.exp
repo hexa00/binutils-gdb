@@ -37,31 +37,6 @@ if ![gdb_target_supports_trace] {
     return -1
 }
 
-set libipa [get_in_proc_agent]
-set remote_libipa [gdb_load_shlib $libipa]
-
-# Can't use prepare_for_testing, because that splits compiling into
-# building objects and then linking, and we'd fail with "linker input
-# file unused because linking not done" when building the object.
-
-if { [gdb_compile "$srcdir/$subdir/$srcfile" $binfile \
-	  executable [list debug $additional_flags shlib=$libipa] ] != "" } {
-    untested "failed to compile ftrace tests"
-    return -1
-}
-
-clean_restart ${executable}
-
-if ![runto_main] {
-    fail "Can't run to main for ftrace tests"
-    return 0
-}
-
-if { [gdb_test "info sharedlibrary" ".*${remote_libipa}.*" "IPA loaded"] != 0 } {
-    untested "Could not find IPA lib loaded"
-    return 1
-}
-
 proc test_tracepoints { trace_command condition num_frames { kfail_proc 0 } } {
     global executable gdb_prompt
 
@@ -126,7 +101,10 @@ proc 18955_i386_failure { trace_command } {
     }
 }
 
-foreach trace_command { "trace" "ftrace" } {
+proc test_trace_command { trace_command } {
+
+    global pcreg
+
     # This condition is always true as the PC should be set to the tracepoint
     # address when hit.
     test_tracepoints $trace_command "\$$pcreg == *set_point" 10
@@ -303,3 +281,37 @@ foreach trace_command { "trace" "ftrace" } {
     test_tracepoints $trace_command "(0x0aaaaaaaaaaaaaaa > 0x09999999bbbbbbbb ? 1 : 0) == 1" 10
     test_tracepoints $trace_command "(0x00088888ccaaaaaa > 0x09999999bbbbbbbb ? 1 : 0) == 1" 0
 }
+
+
+test_trace_command "trace"
+
+set libipa [get_in_proc_agent]
+
+if { [catch {gdb_load_shlib $libipa} remote_libipa] } {
+    untested "Failed to load $libipa"
+    return -1
+}
+
+# Can't use prepare_for_testing, because that splits compiling into
+# building objects and then linking, and we'd fail with "linker input
+# file unused because linking not done" when building the object.
+
+if { [gdb_compile "$srcdir/$subdir/$srcfile" $binfile \
+	  executable [list debug $additional_flags shlib=$libipa] ] != "" } {
+    untested "failed to compile ftrace tests"
+    return -1
+}
+
+clean_restart ${executable}
+
+if ![runto_main] {
+    fail "Can't run to main for ftrace tests"
+    return 0
+}
+
+if { [gdb_test "info sharedlibrary" ".*${remote_libipa}.*" "IPA loaded"] != 0 } {
+    untested "Could not find IPA lib loaded"
+    return 1
+}
+
+test_trace_command "ftrace"

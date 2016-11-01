@@ -48,7 +48,11 @@ if ![gdb_target_supports_trace] {
 
 # Compile the test case with the in-process agent library.
 set libipa [get_in_proc_agent]
-set remote_libipa [gdb_load_shlib $libipa]
+
+if { [catch {gdb_load_shlib $libipa} remote_libipa] } {
+    untested "Failed to load $libipa"
+    return -1
+}
 
 lappend options shlib=$libipa
 

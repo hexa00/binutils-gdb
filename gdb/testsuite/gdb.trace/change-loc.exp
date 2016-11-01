@@ -354,7 +354,10 @@ tracepoint_install_in_trace_disabled "trace"
 
 # Re-compile test case with IPA.
 set libipa [get_in_proc_agent]
-gdb_load_shlib $libipa
+if { [catch {gdb_load_shlib $libipa}] } {
+    untested "Failed to load $libipa"
+    return -1
+}
 
 if { [gdb_compile "$srcdir/$subdir/$srcfile" $binfile executable \
 	  [list debug nowarnings shlib=$libipa shlib=$lib_sl1 shlib_load] ] != "" } {

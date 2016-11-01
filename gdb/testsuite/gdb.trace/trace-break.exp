@@ -349,7 +349,11 @@ break_trace_same_addr_6 "trace" "enable" "trace" "disable"
 break_trace_same_addr_6 "trace" "disable" "trace" "enable"
 
 set libipa [get_in_proc_agent]
-set remote_libipa [gdb_load_shlib $libipa]
+
+if { [catch {gdb_load_shlib $libipa} remote_libipa] } {
+    untested "Failed to load $libipa"
+    return -1
+}
 
 # Can't use prepare_for_testing, because that splits compiling into
 # building objects and then linking, and we'd fail with "linker input

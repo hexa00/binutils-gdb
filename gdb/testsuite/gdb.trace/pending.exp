@@ -503,7 +503,10 @@ pending_tracepoint_installed_during_trace "trace"
 
 # Re-compile test case with IPA.
 set libipa [get_in_proc_agent]
-gdb_load_shlib $libipa
+if { [catch gdb_load_shlib $libipa] } {
+    untested "Failed to load $libipa"
+    return -1
+}
 
 lappend exec_opts "shlib=$libipa"
 
