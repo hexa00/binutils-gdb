@@ -15,22 +15,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#ifdef SYMBOL_PREFIX
-#define SYMBOL(str)     SYMBOL_PREFIX #str
-#else
-#define SYMBOL(str)     #str
-#endif
-
-/* `set_point' further below is the label where we'll set tracepoints
-   at.  The insn at the label must the large enough to fit a fast
-   tracepoint jump.  */
-#if (defined __x86_64__ || defined __i386__)
-#  define NOP "   .byte 0xe9,0x00,0x00,0x00,0x00\n" /* jmp $+5 (5-byte nop) */
-#elif (defined __aarch64__)
-#  define NOP "    nop\n"
-#else
-#  define NOP "" /* port me */
-#endif
+#include "trace-common.h"
 
 int
 main(void)
@@ -45,10 +30,7 @@ main(void)
 #define LINE_WITH_FAST_TRACEPOINT					\
   do {									\
     i = 1;								\
-    asm ("    .global " SYMBOL (set_point) "\n"			\
-	 SYMBOL (set_point) ":\n"					\
-	 NOP								\
-    );									\
+    FAST_TRACEPOINT_LABEL(set_point);					\
     i = 2;								\
  } while (0)
 
